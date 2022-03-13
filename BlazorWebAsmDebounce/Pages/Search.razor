@@ -36,11 +36,12 @@
         searchSubscription = searchSubject
             .Throttle(TimeSpan.FromMilliseconds(300))
             .DistinctUntilChanged()
-            .SelectMany(async searchQuery => new
+            .Select(async searchQuery => new
             {
                 query = searchQuery,
                 results = await SearchService.SearchAsync(searchQuery),
             })
+            .Switch()
             .Subscribe(search =>
             {
                 Console.WriteLine($"{DateTime.Now.ToString("o")} Results: {search.query}");
