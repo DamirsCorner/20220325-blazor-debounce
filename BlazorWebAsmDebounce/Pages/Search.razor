@@ -1,8 +1,11 @@
 ﻿@page "/search"
 
 @using BlazorWebAsmDebounce.Services
+@using System.Reactive.Subjects
+@using System.Reactive.Linq
 
 @inject SearchService SearchService
+@implements IDisposable
 
 <PageTitle>Search</PageTitle>
 
@@ -21,12 +24,34 @@
 </ul>
 
 @code {
+    private readonly Subject<string?> searchSubject = new();
+    private IDisposable? searchSubscription;
+
     public IEnumerable<string> SearchResults { get; private set; } = Array.Empty<string>();
 
-    public async Task OnSearchQueryInput(ChangeEventArgs args)
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        searchSubscription = searchSubject
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .DistinctUntilChanged()
+            .SelectMany(async searchQuery => await SearchService.SearchAsync(searchQuery))
+            .Subscribe(results =>
+            {
+                SearchResults = results;
+                StateHasChanged();
+            });
+    }
+
+    public void Dispose()
+    {
+        searchSubscription?.Dispose();
+    }
+
+    public void OnSearchQueryInput(ChangeEventArgs args)
     {
         var searchQuery = args.Value?.ToString();
-        SearchResults = await SearchService.SearchAsync(searchQuery?.Trim());
-        StateHasChanged();
+        searchSubject.OnNext(searchQuery?.Trim());
     }
 }
