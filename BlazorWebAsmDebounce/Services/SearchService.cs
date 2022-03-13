@@ -457,7 +457,8 @@ public class SearchService
         }
 
         Console.WriteLine($"{DateTime.Now.ToString("o")} Search: {query}");
-        await Task.Delay(1000);
+        await Task.Delay(Random.Shared.Next(500, 2500));
+        Console.WriteLine($"{DateTime.Now.ToString("o")} Done: {query}");
         return games
             .Where(game => game.ToLowerInvariant().Contains(query.ToLowerInvariant()))
             .ToArray();
