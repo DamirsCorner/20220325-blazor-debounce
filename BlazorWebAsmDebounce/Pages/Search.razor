@@ -1,0 +1,32 @@
+﻿@page "/search"
+
+@using BlazorWebAsmDebounce.Services
+
+@inject SearchService SearchService
+
+<PageTitle>Search</PageTitle>
+
+<h1>Search</h1>
+
+<div class="mb-3">
+    <label for="searchQuery" class="form-label">Search</label>
+    <input type="text" class="form-control" id="searchQuery" @oninput="OnSearchQueryInput">
+</div>
+
+<ul class="list-group">
+    @foreach (var result in SearchResults)
+    {
+        <li class="list-group-item">@result</li>
+    }
+</ul>
+
+@code {
+    public IEnumerable<string> SearchResults { get; private set; } = Array.Empty<string>();
+
+    public async Task OnSearchQueryInput(ChangeEventArgs args)
+    {
+        var searchQuery = args.Value?.ToString();
+        SearchResults = await SearchService.SearchAsync(searchQuery?.Trim());
+        StateHasChanged();
+    }
+}
